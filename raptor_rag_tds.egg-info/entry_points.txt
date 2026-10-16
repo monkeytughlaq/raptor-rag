@@ -1,0 +1,3 @@
+[console_scripts]
+raptor-app = tds_app1:main
+raptor-ingest = unified_rag_pipeline:main

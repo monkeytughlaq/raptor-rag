@@ -1,0 +1,427 @@
+# 🚀 RAPTOR-RAG Self-Learning TDS Expert Chatbot
+
+A sophisticated self-learning RAG (Retrieval-Augmented Generation) chatbot implementing the **RAPTOR** (Recursive Abstractive Processing for Tree-Organized Retrieval) algorithm with **multi-user authentication**, **feedback-based learning**, and **PostgreSQL database** for Indian TDS (Tax Deducted at Source) compliance assistance.
+
+## 🌟 Key Features
+
+### Core Capabilities
+- **🌳 RAPTOR Hierarchical RAG**: 4-level tree structure for multi-granularity retrieval
+- **🧠 Self-Learning Engine**: Learns from user feedback to improve responses
+- **🔐 Multi-User Authentication**: Secure JWT-based user management
+- **📊 Analytics Dashboard**: Track performance and query patterns
+- **🔍 Smart Context Reuse**: Reuses successful contexts for similar queries
+- **🤖 TDS Analysis**: AI-powered TDS section and rate determination
+- **📄 Advanced OCR**: Extract payment details from invoices (PDF, DOCX, images)
+- **💾 PostgreSQL Database**: Persistent storage of queries, responses, and feedback
+
+### Learning Features
+- **Query Similarity Detection**: Find and reuse contexts from similar past queries
+- **Automatic Parameter Optimization**: Self-tuning retrieval thresholds based on feedback
+- **Knowledge Gap Identification**: Identify topics needing better documentation
+- **Performance Trending**: Track improvement over time
+
+---
+
+## 📋 Prerequisites
+
+### System Requirements
+- **Docker & Docker Compose** (recommended) OR
+- **Python 3.9-3.12** + **PostgreSQL 12+**
+- **RAM**: 8GB minimum (16GB recommended)
+- **Disk**: 2GB free space
+
+### External Dependencies
+1. **Azure OpenAI Account** (required)
+   - Deployed GPT model (GPT-3.5-turbo or GPT-4)
+   - API key and endpoint URL
+
+2. **Tesseract OCR** (for invoice extraction)
+   ```bash
+   # macOS
+   brew install tesseract
+   
+   # Ubuntu/Debian
+   sudo apt-get install tesseract-ocr
+   ```
+
+---
+
+## 🚀 Quick Start (Docker - Recommended)
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/monkeytughlaq/RAG-notebooklm.git
+cd raptor-rag
+```
+
+### 2. Configure Environment
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env and add your Azure OpenAI credentials
+nano .env  # or use any text editor
+```
+
+**Required .env variables:**
+```env
+AZURE_OPENAI_API_KEY=your_api_key_here
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_DEPLOYMENT_NAME=your-gpt-deployment-name
+JWT_SECRET_KEY=your_random_secret_key_change_this
+PASSWORD_SALT=your_password_salt_change_this
+```
+
+### 3. Deploy with Docker
+```bash
+# Make deploy script executable
+chmod +x deploy.sh
+
+# Run deployment
+./deploy.sh
+```
+
+Choose option 1 for Docker Compose deployment.
+
+### 4. Initialize Data (First Time Only)
+```bash
+# Build RAPTOR tree from your TDS documents
+# First, add your PDF/DOCX files to the data/ directory
+docker-compose exec raptor_app python unified_rag_pipeline.py
+```
+
+### 5. Access Application
+Open your browser to: **http://localhost:8501**
+
+Create your first user account and start chatting!
+
+---
+
+## 💻 Local Development Setup
+
+### 1. Setup PostgreSQL
+```bash
+# Install PostgreSQL
+brew install postgresql  # macOS
+# OR
+sudo apt-get install postgresql postgresql-contrib  # Ubuntu
+
+# Start PostgreSQL
+brew services start postgresql  # macOS
+# OR
+sudo systemctl start postgresql  # Ubuntu
+
+# Create database
+createdb raptor_rag
+```
+
+### 2. Install Dependencies
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install project
+pip install -e .
+```
+
+### 3. Configure Environment
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+# Set DATABASE_URL=postgresql://localhost/raptor_rag
+```
+
+### 4. Initialize Database
+```bash
+python init_db.py
+# Follow prompts to create admin user
+```
+
+### 5. Build Knowledge Base
+```bash
+# Add TDS documents to data/
+python unified_rag_pipeline.py
+```
+
+### 6. Run Application
+```bash
+streamlit run tds_app1.py
+```
+
+---
+
+## 📁 Project Structure
+
+```
+raptor-rag/
+├── Core Application
+│   ├── tds_app1.py                 # Main Streamlit app with auth
+│   ├── unified_rag_pipeline.py     # Data ingestion pipeline
+│   ├── bfs_backtrack_enhanced.py   # Enhanced BFS with learning
+│   └── config.py                   # Centralized configuration
+│
+├── Database & Authentication
+│   ├── database.py                 # SQLAlchemy models
+│   ├── auth.py                     # User authentication
+│   ├── feedback.py                 # Feedback tracking
+│   └── init_db.py                  # Database initialization
+│
+├── Learning Engine
+│   ├── learning_engine.py          # Query similarity & optimization
+│   └── analytics.py                # Performance analytics
+│
+├── RAPTOR Components
+│   ├── raptor_setup.py             # UMAP + GMM clustering
+│   ├── raptor_pipeline.py          # Recursive summarization
+│   └── model.py                    # Embeddings + LLM interface
+│
+├── Document Processing
+│   ├── advanced_parsing.py         # Semantic PDF chunking
+│   └── pdf_objects.py              # PDF/DOCX utilities
+│
+├── Docker Configuration
+│   ├── Dockerfile                  # App container
+│   ├── docker-compose.yml          # Multi-container setup
+│   ├── .dockerignore               # Docker build exclusions
+│   └── deploy.sh                   # Deployment script
+│
+├── Configuration
+│   ├── .env.example                # Environment template
+│   ├── pyproject.toml              # Python dependencies
+│   └── README.md                   # This file
+│
+└── Data & Storage
+    ├── data/                       # Input documents (PDFs, DOCX)
+    ├── embeddings/                 # FAISS vector store
+    └── chunks.json                 # Processed chunks
+```
+
+---
+
+## 🎯 How to Use
+
+### User Registration & Login
+1. Open http://localhost:8501
+2. Click "Register" to create account
+3. Login with credentials
+4. Start asking TDS questions!
+
+### Asking Questions
+```
+"What is the TDS rate for professional fees?"
+"Which section applies to contractor payments?"
+"Explain Section 194J compliance requirements"
+```
+
+### Upload Invoices
+1. Click "Upload Invoice/Document"
+2. Upload PDF, image, or DOCX
+3. System extracts payment details via OCR
+4. Ask "Analyze TDS for this invoice"
+5. Get structured TDS section and rate
+
+### Providing Feedback
+- After each response, use 👍/👎 buttons or star ratings
+- System learns from your feedback
+- Similar future queries get improved responses
+
+### Admin Dashboard (Admin Users Only)
+- View query statistics
+- Analyze feedback trends
+- Monitor performance metrics
+- Identify knowledge gaps
+
+---
+
+## 🧠 How the Learning Works
+
+### 1. Query Similarity Matching
+When you ask a question, the system:
+- Checks for similar past queries (using semantic similarity)
+- If found with good feedback, reuses the successful context
+- Saves time and improves consistency
+
+### 2. Automatic Parameter Tuning
+Based on feedback ratings:
+- Adjusts BFS similarity threshold
+- Optimizes number of contexts retrieved
+- Learns optimal settings per query type
+
+### 3. Knowledge Gap Detection
+- Identifies topics with consistently low ratings
+- Suggests which documents to add
+- Highlights areas needing improvement
+
+### 4. Performance Tracking
+- Monitors average rating over time
+- Tracks response quality trends
+- Measures learning effectiveness
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+See `.env.example` for all configuration options:
+
+**Database:**
+```env
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+```
+
+**Learning Engine:**
+```env
+ENABLE_LEARNING=true
+FEEDBACK_THRESHOLD=3
+QUERY_SIMILARITY_THRESHOLD=0.85
+MIN_FEEDBACK_COUNT=10
+```
+
+**Retrieval:**
+```env
+DEFAULT_BFS_THRESHOLD=0.5
+DEFAULT_MAX_DOCS=20
+```
+
+**Feature Flags:**
+```env
+ENABLE_ADMIN_DASHBOARD=true
+ENABLE_FEEDBACK_UI=true
+ENABLE_ANALYTICS=true
+```
+
+---
+
+## 🐳 Docker Commands
+
+```bash
+# View logs
+docker-compose logs -f raptor_app
+
+# Stop containers
+docker-compose down
+
+# Restart containers
+docker-compose restart
+
+# Shell access
+docker-compose exec raptor_app bash
+
+# Database access
+docker-compose exec postgres psql -U raptor -d raptor_rag
+
+# Rebuild after code changes
+docker-compose up -d --build
+```
+
+---
+
+## 📊 API / Database Schema
+
+### Key Tables
+- **users**: User accounts with authentication
+- **sessions**: Conversation sessions
+- **user_queries**: All user queries with embeddings
+- **llm_responses**: Generated responses
+- **user_feedback**: Ratings and comments
+- **query_contexts**: Retrieved chunks per query
+- **learning_parameters**: Optimized retrieval settings
+
+---
+
+## 🧪 Testing
+
+```bash
+# Test database connection
+python database.py
+
+# Test authentication
+python auth.py
+
+# Test learning engine
+python learning_engine.py
+
+# Test BFS retrieval
+python bfs_backtrack_enhanced.py
+
+# Test analytics
+python analytics.py
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Database Connection Failed
+```bash
+# Check PostgreSQL is running
+docker-compose ps  # Docker
+# OR
+pg_isready  # Local
+
+# Check connection string in .env
+```
+
+### FAISS Index Not Found
+```bash
+# Rebuild vector store
+python unified_rag_pipeline.py
+```
+
+### Learning Not Working
+```bash
+# Check feature is enabled
+echo $ENABLE_LEARNING  # Should be 'true'
+
+# Need minimum feedback count (default: 10)
+# Check database for feedback count
+```
+
+### Docker Build Issues
+```bash
+# Clean rebuild
+docker-compose down -v
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+---
+
+## 📚 Additional Resources
+
+- [RAPTOR Paper](https://arxiv.org/abs/2401.18059)
+- [Income Tax Act 1961](https://incometaxindia.gov.in/)
+- [Azure OpenAI Documentation](https://learn.microsoft.com/azure/ai-services/openai/)
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Open Pull Request
+
+---
+
+## 📝 License
+
+MIT License - See LICENSE file for details
+
+---
+
+## 🙏 Acknowledgments
+
+- **RAPTOR Algorithm**: Stanford NLP Group
+- **LangChain**: Framework for LLM applications
+- **Sentence Transformers**: Pre-trained embedding models
+- **FAISS**: Facebook AI Similarity Search
+- **Streamlit**: Web app framework
+- **PostgreSQL**: Robust database system
+
+---
+
+**Built with ❤️ for TDS compliance automation and continuous learning**

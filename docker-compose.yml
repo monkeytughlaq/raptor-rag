@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: raptor_postgres
+    environment:
+      POSTGRES_USER: raptor
+      POSTGRES_PASSWORD: raptor
+      POSTGRES_DB: raptor_rag
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raptor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - raptor_network
+
+  # RAPTOR-RAG Application
+  raptor_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: raptor_app
+    ports:
+      - "8501:8501"
+    environment:
+      - DATABASE_URL=postgresql://raptor:raptor@postgres:5432/raptor_rag
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME}
+      - AZURE_OPENAI_VERSION=${AZURE_OPENAI_VERSION}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - PASSWORD_SALT=${PASSWORD_SALT}
+      - ENABLE_LEARNING=true
+      - ENABLE_USER_TRACKING=true
+      - TESSERACT_CMD=/usr/bin/tesseract
+    volumes:
+      - ./data:/app/data
+      - ./embeddings:/app/embeddings
+      - ./chunks.json:/app/chunks.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - raptor_network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        echo 'Initializing database...' &&
+        python database.py &&
+        echo 'Starting Streamlit app...' &&
+        streamlit run tds_app1.py --server.port=8501 --server.address=0.0.0.0
+      "
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  raptor_network:
+    driver: bridge
